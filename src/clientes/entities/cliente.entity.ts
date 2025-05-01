@@ -5,7 +5,7 @@ export class Cliente {
     @PrimaryGeneratedColumn()
     ClienteID: number;
 
-    @Column({ length: 255, nullable: false })
+    @Column({ length: 255 })
     Nombre: string;
 
     @Column({ length: 255, nullable: true })
