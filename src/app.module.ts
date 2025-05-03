@@ -17,8 +17,8 @@ import {VehiculosModule} from "./vehiculos/vehiculos.module";
       username: 'root',
       password: 'root',
       database: 'tallermecanicodb',
-      entities: [__dirname + '/../entities/*.entity{.ts,.js}'],
-      synchronize: true, // ¡Cuidado! En producción, usa migraciones syncronize = false
+      entities: [__dirname + '/**/*.entity.{ts,js}'],
+      synchronize: false, // ¡Cuidado! En producción, usa migraciones syncronize = false
       autoLoadEntities: false, // <-- ADD THIS LINE
       logging: ['error', 'warn'],
     }),
@@ -27,11 +27,11 @@ import {VehiculosModule} from "./vehiculos/vehiculos.module";
     OrdenesModule,
     AuthModule,
     VehiculosModule,
- /*
+    /*
     DetalleOrdenModule,
     InventarioModule,
-    ReportesModule,*/
-
+    ReportesModule,
+    */
   ],
   controllers: [AppController],
   providers: [AppService],
