@@ -20,6 +20,9 @@ export class Cliente {
     @Column({ length: 255, nullable: true })
     CorreoElectronico: string;
 
+    @Column({ length: 20, nullable: true })  // Nuevo campo NIT
+    Nit: string;
+
     @CreateDateColumn()
     FechaRegistro: Date;
 }

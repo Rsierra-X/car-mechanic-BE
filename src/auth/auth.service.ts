@@ -16,6 +16,7 @@ export class AuthService {
     ) {}
 
     async register(dto: RegisterDto): Promise<Omit<Usuario, 'Contrasena'>> {
+        console.log(dto)
         const existe = await this.usuarioRepository.findOne({
             where: { NombreUsuario: dto.NombreUsuario },
         });
@@ -29,6 +30,7 @@ export class AuthService {
         const nuevo = this.usuarioRepository.create({
             ...dto,
             Contrasena: hash,
+            Rol: dto.Rol
         });
 
         const usuarioGuardado = await this.usuarioRepository.save(nuevo);
@@ -37,7 +39,7 @@ export class AuthService {
         return resto;
     }
 
-    async login(dto: LoginDto): Promise<{ access_token: string }> {
+    async login(dto: LoginDto): Promise<{ access_token: string}> {
         const usuario = await this.usuarioRepository.findOne({
             where: { NombreUsuario: dto.NombreUsuario },
         });
