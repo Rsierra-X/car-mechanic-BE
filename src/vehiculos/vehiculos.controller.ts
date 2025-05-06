@@ -1,33 +1,39 @@
-import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
-import { VehiculosService } from './vehiculos.service';
-import { VehiculoDto } from './dto/vehiculo.dto';
+import {Controller, Get, Post, Body, Param, Put, Delete, ParseIntPipe} from '@nestjs/common';
+import {VehiculoService} from "./vehiculos.service";
+import {CreateVehiculoDTO, UpdateVehiculoDTO} from "./dto/vehiculo.dto";
+import {Vehiculo} from "./entities/vehiculos.entity";
+
 
 @Controller('vehiculos')
-export class VehiculosController {
-    constructor(private readonly vehiculosService: VehiculosService) {}
+//@UseGuards(JwtAuthGuard)
+export class VehiculoController {
+    constructor(private readonly vehiculoService: VehiculoService) { }
+
+    @Post()
+    async create(@Body() vehiculoDTO: CreateVehiculoDTO): Promise<Vehiculo> {
+        return this.vehiculoService.create(vehiculoDTO);
+    }
 
     @Get()
-    findAll() {
-        return this.vehiculosService.findAll();
+    async findAll(): Promise<Vehiculo[]> {
+        return this.vehiculoService.findAll();
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.vehiculosService.findOne(+id);
-    }
-
-    @Post()
-    create(@Body() dto: VehiculoDto) {
-        return this.vehiculosService.create(dto);
+    async findOne(@Param('id', ParseIntPipe) id: number): Promise<Vehiculo> {
+        return this.vehiculoService.findOne(id);
     }
 
     @Put(':id')
-    update(@Param('id') id: string, @Body() dto: VehiculoDto) {
-        return this.vehiculosService.update(+id, dto);
+    async update(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() vehiculoDTO: UpdateVehiculoDTO,
+    ): Promise<Vehiculo> {
+        return this.vehiculoService.update(id, vehiculoDTO);
     }
 
     @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.vehiculosService.remove(+id);
+    async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
+        await this.vehiculoService.remove(id);
     }
 }

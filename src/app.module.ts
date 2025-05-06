@@ -1,12 +1,13 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import {Module} from '@nestjs/common';
+import {AppController} from './app.controller';
+import {AppService} from './app.service';
 import {TypeOrmModule} from "@nestjs/typeorm";
-import { UsuariosModule } from './usuarios/usuarios.module';
-import { ClientesModule } from './clientes/clientes.module';
-import { AuthModule } from './auth/auth.module';
+import {UsuariosModule} from './usuarios/usuarios.module';
+import {ClientesModule} from './clientes/clientes.module';
+import {AuthModule} from './auth/auth.module';
 import {OrdenesModule} from "./ordenes/ordenes.module";
 import {VehiculosModule} from "./vehiculos/vehiculos.module";
+import {InventarioModule} from "./inventario/inventario.module";
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import {VehiculosModule} from "./vehiculos/vehiculos.module";
     OrdenesModule,
     AuthModule,
     VehiculosModule,
+    InventarioModule
     /*
     DetalleOrdenModule,
     InventarioModule,

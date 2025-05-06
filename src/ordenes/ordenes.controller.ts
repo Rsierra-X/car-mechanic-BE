@@ -1,33 +1,38 @@
-import {Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put} from '@nestjs/common';
-import {OrdenesService} from "./ordenes.service";
-import {OrdenDto} from "./dto/orden.dto";
+import { Controller, Get, Post, Body, Put, Param, Delete, ParseIntPipe, UseGuards } from '@nestjs/common';
+import {OrderService} from "./ordenes.service";
+import {CreateOrderDTO, UpdateOrderDTO} from "./dto/orden.dto";
+import {Order} from "./entities/orden.entity";
 
-@Controller('ordenes')
-export class OrdenesController {
-    constructor(private readonly ordenesService: OrdenesService) {}
+@Controller('orders')
+//@UseGuards(JwtAuthGuard)  // Descomenta esto para proteger la ruta
+export class OrderController {
+    constructor(private readonly orderService: OrderService) { }
+
+    @Post()
+    async create(@Body() orderDTO: CreateOrderDTO): Promise<Order> {
+        return this.orderService.create(orderDTO);
+    }
 
     @Get()
-    findAll() {
-        return this.ordenesService.findAll();
+    async findAll(): Promise<Order[]> {
+        return this.orderService.findAll();
     }
 
     @Get(':id')
-    findOne(@Param('id', ParseIntPipe) id: number) {
-        return this.ordenesService.findOne(id);
-    }
-
-    @Post()
-    create(@Body() dto: OrdenDto) {
-        return this.ordenesService.create(dto);
+    async findOne(@Param('id', ParseIntPipe) id: number): Promise<Order> {
+        return this.orderService.findOne(id);
     }
 
     @Put(':id')
-    update(@Param('id', ParseIntPipe) id: number, @Body() dto: OrdenDto) {
-        return this.ordenesService.update(id, dto);
+    async update(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() orderDTO: UpdateOrderDTO,
+    ): Promise<Order> {
+        return this.orderService.update(id, orderDTO);
     }
 
     @Delete(':id')
-    delete(@Param('id', ParseIntPipe) id: number) {
-        return this.ordenesService.delete(id);
+    async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
+        await this.orderService.remove(id);
     }
 }

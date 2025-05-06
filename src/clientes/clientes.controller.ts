@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
+import {Controller, Get, Post, Body, Param, Put, Delete, ParseIntPipe, Query} from '@nestjs/common';
 import { ClientesService } from './clientes.service';
 import { Cliente } from './entities/cliente.entity';
 
+
 @Controller('clientes')
 export class ClientesController {
-    constructor(private readonly clientesService: ClientesService) {}
+    constructor(private readonly clientesService: ClientesService) { }
 
     @Get()
     findAll(): Promise<Cliente[]> {
@@ -12,7 +13,7 @@ export class ClientesController {
     }
 
     @Get(':id')
-    findOne(@Param('id') id: number): Promise<Cliente> {
+    findOne(@Param('id', ParseIntPipe) id: number): Promise<Cliente> {
         return this.clientesService.findOne(+id);
     }
 
@@ -22,12 +23,17 @@ export class ClientesController {
     }
 
     @Put(':id')
-    update(@Param('id') id: number, @Body() body: Partial<Cliente>): Promise<Cliente> {
+    update(@Param('id', ParseIntPipe) id: number, @Body() body: Partial<Cliente>): Promise<Cliente> {
         return this.clientesService.update(+id, body);
     }
 
     @Delete(':id')
-    delete(@Param('id') id: number): Promise<void> {
+    delete(@Param('id', ParseIntPipe) id: number): Promise<void> {
         return this.clientesService.delete(+id);
+    }
+
+    @Get('search')
+    search(@Query('query') query: string): Promise<Cliente[]> {
+        return this.clientesService.search(query);
     }
 }

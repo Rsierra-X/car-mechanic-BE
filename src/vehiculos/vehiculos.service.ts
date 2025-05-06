@@ -1,39 +1,40 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Vehiculo } from './entities/vehiculos.entity';
-import { VehiculoDto } from './dto/vehiculo.dto';
+import {CreateVehiculoDTO, UpdateVehiculoDTO} from "./dto/vehiculo.dto";
 
 @Injectable()
-export class VehiculosService {
+export class VehiculoService {
     constructor(
         @InjectRepository(Vehiculo)
-        private vehiculoRepo: Repository<Vehiculo>,
-    ) {}
+        private vehiculoRepository: Repository<Vehiculo>,
+    ) { }
 
-    findAll() {
-        return this.vehiculoRepo.find({ relations: ['Cliente'] });
+    async create(vehiculoDTO: CreateVehiculoDTO): Promise<Vehiculo> {
+        const vehiculo = this.vehiculoRepository.create(vehiculoDTO);
+        return this.vehiculoRepository.save(vehiculo);
     }
 
-    async findOne(id: number) {
-        const vehiculo = await this.vehiculoRepo.findOne({ where: { VehiculoID: id }, relations: ['Cliente'] });
-        if (!vehiculo) throw new NotFoundException(`Vehículo con ID ${id} no encontrado.`);
-        return vehiculo;
+    async findAll(): Promise<Vehiculo[]> {
+        return this.vehiculoRepository.find();
     }
 
-    create(data: VehiculoDto) {
-        const vehiculo = this.vehiculoRepo.create(data);
-        return this.vehiculoRepo.save(vehiculo);
+    async findOne(id: number): Promise<Vehiculo> {
+        return this.vehiculoRepository.findOneOrFail({
+            where: { VehiculoID: id },
+        });
     }
 
-    async update(id: number, data: VehiculoDto) {
-        await this.vehiculoRepo.update(id, data);
-        return this.findOne(id);
+    async update(id: number, vehiculoDTO: UpdateVehiculoDTO): Promise<Vehiculo> {
+        const existingVehiculo = await this.vehiculoRepository.findOneOrFail({ where: { VehiculoID: id } });
+        this.vehiculoRepository.merge(existingVehiculo, vehiculoDTO);
+        return this.vehiculoRepository.save(existingVehiculo);
     }
 
-    async remove(id: number) {
-        const vehiculo = await this.findOne(id);
-        return this.vehiculoRepo.remove(vehiculo);
+    async remove(id: number): Promise<void> {
+        const vehiculo = await this.vehiculoRepository.findOneOrFail({ where: { VehiculoID: id } });
+        await this.vehiculoRepository.remove(vehiculo);
     }
 }
 

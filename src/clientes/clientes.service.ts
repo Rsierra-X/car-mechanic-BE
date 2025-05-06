@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import {Like, Repository} from 'typeorm';
 import { Cliente } from './entities/cliente.entity';
 
 @Injectable()
@@ -8,7 +8,7 @@ export class ClientesService {
     constructor(
         @InjectRepository(Cliente)
         private clienteRepository: Repository<Cliente>,
-    ) {}
+    ) { }
 
     async findAll(): Promise<Cliente[]> {
         return this.clienteRepository.find();
@@ -37,5 +37,16 @@ export class ClientesService {
         if (result.affected === 0) {
             throw new NotFoundException(`Cliente con ID ${id} no encontrado`);
         }
+    }
+
+    async search(query: string): Promise<Cliente[]> {
+        return this.clienteRepository.find({
+            where: [
+                { Nombre: Like(`%${query}%`) },
+                { Apellido: Like(`%${query}%`) },
+                { Nit: Like(`%${query}%`) },
+                { Telefono: Like(`%${query}%`) },
+            ],
+        });
     }
 }

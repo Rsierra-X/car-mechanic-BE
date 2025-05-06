@@ -1,39 +1,58 @@
-import {
-    Entity,
-    PrimaryGeneratedColumn,
-    Column,
-    ManyToOne,
-    JoinColumn,
-    CreateDateColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Cliente } from '../../clientes/entities/cliente.entity';
-import { Vehiculo } from '../../vehiculos/entities/vehiculos.entity';
+import {OrderDetail} from "../../detalle-orden/entities/orderDetail";
 
-@Entity('Ordenes')
-export class Orden {
+@Entity()
+export class Order {
     @PrimaryGeneratedColumn()
-    OrdenID: number;
+    id: number;
 
-    @ManyToOne(() => Cliente)
-    @JoinColumn({ name: 'ClienteID' })
-    Cliente: Cliente;
+    @Column({ type: 'date' })
+    orderDate: Date;
 
-    @ManyToOne(() => Vehiculo)
-    @JoinColumn({ name: 'VehiculoID' })
-    Vehiculo: Vehiculo;
+    @ManyToOne(() => Cliente, client => client.orders)
+    @JoinColumn({ name: 'clientId' })
+    client: Cliente;
 
-    @CreateDateColumn()
-    FechaCreacion: Date;
+    @Column()
+    clientId: number;
 
-    @Column({ type: 'datetime', nullable: true })
-    FechaInicio: Date;
+    @Column()
+    clientName: string;
 
-    @Column({ type: 'datetime', nullable: true })
-    FechaFinalizacion: Date;
+    @Column()
+    clientNit: string;
 
-    @Column({ length: 50 })
-    Estado: string;
+    @Column()
+    brand: string;
 
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
-    TotalOrden: number;
+    @Column()
+    type: string;
+
+    @Column()
+    plate: string;
+
+    @Column({ nullable: true })
+    color?: string;
+
+    @Column({ nullable: true })
+    year?: string;
+
+    @Column({ nullable: true })
+    nextService?: string;
+
+    @OneToMany(() => OrderDetail, orderDetail => orderDetail.order, { cascade: ['insert', 'update'] })
+    orderDetails: OrderDetail[];
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+    laborCost: number;
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+    abono?: number;
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+    total: number;
+
+    @Column({ default: 'En Proceso' })
+    estado: string;
 }
