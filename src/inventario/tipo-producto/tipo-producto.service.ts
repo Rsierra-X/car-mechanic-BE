@@ -26,8 +26,14 @@ export class TipoProductoService {
     }
 
     async update(id: number, dto: UpdateTipoProductoDto) {
-        const tipo = await this.repo.preload({ id, nombre: dto.nombre });
-        if (!tipo) throw new NotFoundException('Tipo de producto no encontrado');
+        const tipo = await this.repo.findOneByOrFail({ id });
+
+        if (!tipo) {
+            throw new NotFoundException('Marca no encontrada');
+        }
+
+        Object.assign(tipo, dto);
+
         return this.repo.save(tipo);
     }
 

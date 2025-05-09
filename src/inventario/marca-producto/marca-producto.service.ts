@@ -26,8 +26,14 @@ export class MarcaProductoService {
     }
 
     async update(id: number, dto: UpdateMarcaProductoDto) {
-        const marca = await this.repo.preload({ id, nombre: dto.nombre, });
-        if (!marca) throw new NotFoundException('Marca no encontrada');
+        const marca = await this.repo.findOneByOrFail({ id });
+
+        if (!marca) {
+            throw new NotFoundException('Marca no encontrada');
+        }
+
+        Object.assign(marca, dto);
+
         return this.repo.save(marca);
     }
 

@@ -13,27 +13,56 @@ import {
 import {PartialType} from "@nestjs/mapped-types";
 import {CreateOrderDetailDto} from "../../detalle-orden/dto/order-detail.dto";
 
+class VehiculoDto {
+    @IsNotEmpty()
+    Placa: string;
+
+    @IsNotEmpty()
+    Marca: string;
+
+    @IsNotEmpty()
+    Modelo: string;
+
+    @IsNumber()
+    Anio: number;
+
+    @IsNotEmpty()
+    Color: string;
+
+    @IsNumber()
+    Kilometraje: number;
+}
+
 export class CreateOrderDto {
     @IsNumber()
-    clientId: number;
+    clienteId: number;
 
-    // Datos del vehículo
-    @IsString() marca: string;
-    @IsString() modelo: string;
-    @IsNumber() anio: number;
-    @IsString() color: string;
-    @IsString() placa: string;
-    @IsNumber() kilometraje: number;
+    @ValidateNested()
+    @Type(() => VehiculoDto)
+    vehiculo: VehiculoDto;
 
-    // Datos financieros
-    @IsNumber() manoDeObra: number;
-    @IsNumber() abono: number;
-    @IsNumber() total: number;
-
-    // Detalle
+    @IsArray()
     @ValidateNested({ each: true })
     @Type(() => CreateOrderDetailDto)
-    orderDetails: CreateOrderDetailDto[];
+    detalles: CreateOrderDetailDto[];
+
+    @IsNumber()
+    manoDeObra: number;
+
+    @IsNumber()
+    abono: number;
+
+    @IsNumber()
+    total: number;
 }
 
 export class UpdateOrderDto extends PartialType(CreateOrderDto) {}
+
+export class OrderToCreate {
+    @IsNumber()
+    clienteId: number;
+
+    @IsNumber()
+    vehiculoId: number;
+}
+

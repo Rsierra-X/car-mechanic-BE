@@ -27,6 +27,4 @@ export class Cliente {
     @CreateDateColumn()
     FechaRegistro: Date;
 
-    @OneToMany(() => Order, order => order.client)
-    orders: Order[];
 }

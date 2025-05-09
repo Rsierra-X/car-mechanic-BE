@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {Injectable, NotFoundException} from '@nestjs/common';
 import {InjectRepository} from "@nestjs/typeorm";
 import {Servicio} from "./entities/servicio.entity";
 import {Repository} from "typeorm";
@@ -22,7 +22,11 @@ export class ServicioService {
     }
 
     async findOne(id: number): Promise<Servicio> {
-        return this.servicioRepo.findOne({ where: { ServicioID: id } });
+        const servicioFound = await this.servicioRepo.findOne({ where: { ServicioID: id } });
+        if (!servicioFound) {
+            throw new NotFoundException('Orden no encontrada después de guardar');
+        }
+        return servicioFound;
     }
 
     async update(id: number, dto: UpdateServicioDto): Promise<Servicio> {

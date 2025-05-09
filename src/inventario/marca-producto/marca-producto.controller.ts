@@ -3,27 +3,29 @@ import {MarcaProductoService} from "./marca-producto.service";
 import {CreateMarcaProductoDto} from "../dto/create-marca-producto.dto";
 import {UpdateMarcaProductoDto} from "../dto/update-marca-producto.dto";
 
-@Controller('inventario/marcas')
+@Controller('marcas')
 export class MarcaProductoController {
     constructor(private readonly service: MarcaProductoService) {}
-
-    @Post()
-    create(@Body() dto: CreateMarcaProductoDto) {
-        return this.service.create(dto);
-    }
 
     @Get()
     findAll() {
         return this.service.findAll();
     }
 
+    @Post()
+    create(@Body() dto: CreateMarcaProductoDto) {
+        return this.service.create(dto);
+    }
+
     @Get(':id')
     findOne(@Param('id') id: number) {
+        console.log('here')
         return this.service.findOne(id);
     }
 
     @Put(':id')
     update(@Param('id') id: number, @Body() dto: UpdateMarcaProductoDto) {
+        console.log('here')
         return this.service.update(id, dto);
     }
 

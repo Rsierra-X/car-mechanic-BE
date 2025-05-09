@@ -11,9 +11,7 @@ import {InventarioModule} from "./inventario/inventario.module";
 import {DetalleOrdenModule} from "./detalle-orden/detalle-orden.module";
 import { VehiculosListaModule } from './vehiculos-lista/vehiculos-lista.module';
 import { ServicioService } from './servicio/servicio.service';
-import { ServicioController } from './servicio/servicio.controller';
-import { ServicioModule } from './servicio/servicio.module';
-import { DetalleOrderController } from './detalle-order/detalle-order.controller';
+import {ServicioModule} from './servicio/servicio.module';
 
 @Module({
   imports: [
@@ -31,15 +29,15 @@ import { DetalleOrderController } from './detalle-order/detalle-order.controller
     }),
     UsuariosModule,
     ClientesModule,
-    OrdenesModule,
     AuthModule,
     VehiculosModule,
     InventarioModule,
     DetalleOrdenModule,
     VehiculosListaModule,
-    ServicioModule
+    ServicioModule,
+    OrdenesModule,
   ],
   controllers: [AppController],
-  providers: [AppService, ServicioService],
+  providers: [AppService],
 })
 export class AppModule {}

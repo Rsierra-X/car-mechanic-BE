@@ -40,3 +40,32 @@ export class Order {
     @Column({ default: 'En Proceso' })
     estado: string;
 }
+
+/*
+{
+    "clienteId": 1,
+    "vehiculo": {
+    "Placa": "P123ABC",
+        "Marca": "Toyota",
+        "Modelo": "Corolla",
+        "Anio": 2020,
+        "Color": "Blanco",
+        "Kilometraje": 120000
+},
+    "detalles": [
+    {
+        "tipo": "producto",
+        "productoId": 5,
+        "cantidad": 2,
+        "precioUnitario": 250
+    },
+    {
+        "tipo": "servicio",
+        "servicioId": 3,
+        "precioUnitario": 500
+    }
+],
+    "manoDeObra": 100,
+    "abono": 200,
+    "total": 1100
+}*/
