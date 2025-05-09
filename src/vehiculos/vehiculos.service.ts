@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {BadRequestException, Injectable} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Vehiculo } from './entities/vehiculos.entity';
@@ -9,12 +9,7 @@ export class VehiculoService {
     constructor(
         @InjectRepository(Vehiculo)
         private vehiculoRepository: Repository<Vehiculo>,
-    ) { }
-
-    async create(vehiculoDTO: CreateVehiculoDTO): Promise<Vehiculo> {
-        const vehiculo = this.vehiculoRepository.create(vehiculoDTO);
-        return this.vehiculoRepository.save(vehiculo);
-    }
+    ) {}
 
     async findAll(): Promise<Vehiculo[]> {
         return this.vehiculoRepository.find();
@@ -26,15 +21,23 @@ export class VehiculoService {
         });
     }
 
-    async update(id: number, vehiculoDTO: UpdateVehiculoDTO): Promise<Vehiculo> {
-        const existingVehiculo = await this.vehiculoRepository.findOneOrFail({ where: { VehiculoID: id } });
-        this.vehiculoRepository.merge(existingVehiculo, vehiculoDTO);
-        return this.vehiculoRepository.save(existingVehiculo);
-    }
+    async findOrCreate(dto: CreateVehiculoDTO & { ClienteID: number }): Promise<Vehiculo> {
+        const { Placa, ClienteID } = dto;
 
-    async remove(id: number): Promise<void> {
-        const vehiculo = await this.vehiculoRepository.findOneOrFail({ where: { VehiculoID: id } });
-        await this.vehiculoRepository.remove(vehiculo);
+        if (!Placa) {
+            throw new BadRequestException('Debe proporcionar una placa para identificar el vehículo');
+        }
+
+        let vehiculo = await this.vehiculoRepository.findOne({
+            where: { Placa, ClienteID },
+        });
+
+        if (!vehiculo) {
+            vehiculo = this.vehiculoRepository.create(dto);
+            vehiculo = await this.vehiculoRepository.save(vehiculo);
+        }
+
+        return vehiculo;
     }
 }
 

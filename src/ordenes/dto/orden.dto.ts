@@ -1,141 +1,39 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsDate, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested, Min } from 'class-validator';
+import {
+    IsArray,
+    IsDate,
+    IsNotEmpty,
+    IsNumber,
+    IsOptional,
+    IsString,
+    ValidateNested,
+    Min,
+    IsDateString, IsInt
+} from 'class-validator';
+import {PartialType} from "@nestjs/mapped-types";
+import {CreateOrderDetailDto} from "../../detalle-orden/dto/order-detail.dto";
 
-export class CreateOrderDTO {
-    @IsDate()
-    @IsNotEmpty()
-    orderDate: Date;
-
+export class CreateOrderDto {
     @IsNumber()
-    @IsNotEmpty()
     clientId: number;
 
-    @IsString()
-    @IsNotEmpty()
-    clientName: string;
+    // Datos del vehículo
+    @IsString() marca: string;
+    @IsString() modelo: string;
+    @IsNumber() anio: number;
+    @IsString() color: string;
+    @IsString() placa: string;
+    @IsNumber() kilometraje: number;
 
-    @IsString()
-    @IsNotEmpty()
-    clientNit: string;
+    // Datos financieros
+    @IsNumber() manoDeObra: number;
+    @IsNumber() abono: number;
+    @IsNumber() total: number;
 
-    @IsString()
-    @IsNotEmpty()
-    brand: string;
-
-    @IsString()
-    @IsNotEmpty()
-    type: string;
-
-    @IsString()
-    @IsNotEmpty()
-    plate: string;
-
-    @IsOptional()
-    @IsString()
-    color?: string;
-
-    @IsOptional()
-    @IsString()
-    year?: string;
-
-    @IsOptional()
-    @IsString()
-    nextService?: string;
-
-    @IsArray()
+    // Detalle
     @ValidateNested({ each: true })
-    @IsNotEmpty()
-    @Type(() => OrderDetailDTO)
-    orderDetails: OrderDetailDTO[];
-
-    @IsNumber()
-    @Min(0)
-    laborCost: number;
-
-    @IsOptional()
-    @IsNumber()
-    @Min(0)
-    abono?: number;
-
-    @IsString()
-    estado: string;
+    @Type(() => CreateOrderDetailDto)
+    orderDetails: CreateOrderDetailDto[];
 }
 
-export class UpdateOrderDTO {
-    @IsOptional()
-    @IsDate()
-    orderDate?: Date;
-
-    @IsOptional()
-    @IsNumber()
-    clientId?: number;
-
-    @IsOptional()
-    @IsString()
-    clientName?: string;
-
-    @IsOptional()
-    @IsString()
-    clientNit?: string;
-
-    @IsOptional()
-    @IsString()
-    brand?: string;
-
-    @IsOptional()
-    @IsString()
-    type?: string;
-
-    @IsOptional()
-    @IsString()
-    plate?: string;
-
-    @IsOptional()
-    @IsString()
-    color?: string;
-
-    @IsOptional()
-    @IsString()
-    year?: string;
-
-    @IsOptional()
-    @IsString()
-    nextService?: string;
-
-    @IsOptional()
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => OrderDetailDTO)
-    orderDetails?: OrderDetailDTO[];
-
-    @IsOptional()
-    @IsNumber()
-    @Min(0)
-    laborCost?: number;
-
-    @IsOptional()
-    @IsNumber()
-    @Min(0)
-    abono?: number;
-
-    @IsOptional()
-    @IsString()
-    estado?: string;
-}
-
-
-export class OrderDetailDTO {
-    @IsNumber()
-    @IsNotEmpty()
-    productId: number;
-
-    @IsNumber()
-    @IsNotEmpty()
-    @Min(1)
-    quantity: number;
-
-    @IsNumber()
-    @IsNotEmpty()
-    @Min(0)
-    unitPrice: number;
-}
+export class UpdateOrderDto extends PartialType(CreateOrderDto) {}

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import {Like, Repository} from 'typeorm';
 import { Producto } from './entities/producto.entity';
 import * as ExcelJS from 'exceljs';
-import * as PDFDocument from 'pdfkit';
+const PDFDocument = require('pdfkit');
 import { Response } from 'express';
 
 @Injectable()

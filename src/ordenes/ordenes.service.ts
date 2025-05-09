@@ -5,7 +5,11 @@ import {Order} from "./entities/orden.entity";
 import {OrderDetail} from "../detalle-orden/entities/orderDetail";
 import {Cliente} from "../clientes/entities/cliente.entity";
 import {Producto} from "../inventario/entities/producto.entity";
-import {CreateOrderDTO, UpdateOrderDTO} from "./dto/orden.dto";
+import {CreateOrderDto,UpdateOrderDto} from "./dto/orden.dto";
+import {Vehiculo} from "../vehiculos/entities/vehiculos.entity";
+import {VehiculoService} from "../vehiculos/vehiculos.service";
+import {DetalleOrdenService} from "../detalle-orden/detalle-orden.service";
+import {CreateOrderDetailDto} from "../detalle-orden/dto/order-detail.dto";
 
 
 @Injectable()
@@ -13,121 +17,73 @@ export class OrderService {
     constructor(
         @InjectRepository(Order)
         private orderRepository: Repository<Order>,
-        @InjectRepository(OrderDetail)
-        private orderDetailRepository: Repository<OrderDetail>,
+        @InjectRepository(Vehiculo)
+        private vehiculoRepository: Repository<Vehiculo>,
         @InjectRepository(Cliente)
-        private clientRepository: Repository<Cliente>,
-        @InjectRepository(Producto)
-        private productRepository: Repository<Producto>,
-    ) { }
+        private clienteRepository: Repository<Cliente>,
+        @InjectRepository(OrderDetail)
+        private detailRepository: Repository<OrderDetail>,
+        private vehiculoService: VehiculoService,
+        private orderDetailService: DetalleOrdenService
+    ) {}
 
-    async create(orderDTO: CreateOrderDTO): Promise<Order> {
-        const client = await this.clientRepository.findOneOrFail({ where: { ClienteID: orderDTO.clientId } });
+    async create(createOrderDto: CreateOrderDto): Promise<Order> {
+        const { clienteId, vehiculo, detalles, manoDeObra, abono, total } = createOrderDto;
 
-        let total = orderDTO.laborCost;
-        const orderDetails: OrderDetail[] = [];
-        for (const detailDTO of orderDTO.orderDetails) {
-            const product = await this.productRepository.findOneOrFail({ where: { ProductoID: detailDTO.productId } });
-            if (!product) {
-                throw new NotFoundException(`Product with id ${detailDTO.productId} not found`);
-            }
-            const orderDetail = this.orderDetailRepository.create({
-                productId: detailDTO.productId,
-                quantity: detailDTO.quantity,
-                unitPrice: product.PrecioUnitario,
-            });
-            total += detailDTO.quantity * product.PrecioUnitario;
-            orderDetails.push(orderDetail);
-        }
-        if (orderDTO.abono) {
-            if (orderDTO.abono > total) {
-                throw new Error('El abono no puede ser mayor que el total');
-            }
-        }
+        const cliente = await this.clienteRepository.findOneBy({ ClienteID: clienteId });
+        if (!cliente) throw new NotFoundException('Cliente no encontrado');
 
-
-        const order = this.orderRepository.create({
-            ...orderDTO,
-            client,
-            orderDetails,
-            total,
+        let vehiculoExistente = await this.vehiculoRepository.findOne({
+            where: { Placa: vehiculo.Placa, ClienteID: clienteId }
         });
 
+        if (vehiculoExistente) {
+            vehiculoExistente.Kilometraje = vehiculo.Kilometraje;
+            vehiculoExistente.Color = vehiculo.Color;
+            await this.vehiculoRepository.save(vehiculoExistente);
+        } else {
+            vehiculoExistente = await this.vehiculoService.findOrCreate({...vehiculo, ClienteID: clienteId});
+        }
 
-        return this.orderRepository.save(order);
+        const nuevaOrden = this.orderRepository.create({
+            clienteId,
+            cliente,
+            vehiculoId: vehiculoExistente.VehiculoID,
+            vehiculo: vehiculoExistente,
+            fecha: new Date(),
+            manoDeObra,
+            abono,
+            total,
+            estado: 'Pendiente',
+        });
+
+        const savedOrder = await this.orderRepository.save(nuevaOrden);
+
+        const detallesGuardados = detalles.map(det => this.detailRepository.create({
+            ...det,
+            orderId: savedOrder.id,
+        }));
+        await Promise.all(
+            detalles.map((det: CreateOrderDetailDto) =>
+                this.orderDetailService.create({ ...det, orderId: savedOrder.id })
+            )
+        );
+        await this.detailRepository.save(detallesGuardados);
+
+        return this.orderRepository.findOne({ where: { id: savedOrder.id }, relations: ['detalles'] });
+    }
+
+    async updateEstado(id: number, nuevoEstado: string): Promise<Order> {
+        const orden = await this.orderRepository.findOneBy({ id });
+        if (!orden) throw new NotFoundException('Orden no encontrada');
+        orden.estado = nuevoEstado;
+        return await this.orderRepository.save(orden);
     }
 
     async findAll(): Promise<Order[]> {
         return this.orderRepository.find({
-            relations: ['client', 'orderDetails', 'orderDetails.product'],
+            relations: ['cliente', 'vehiculo', 'detalles'],
+            order: { fecha: 'DESC' },
         });
-    }
-
-    async findOne(id: number): Promise<Order> {
-        return this.orderRepository.findOneOrFail({
-            where: { id },
-            relations: ['client', 'orderDetails', 'orderDetails.product'],
-        });
-    }
-
-    async update(id: number, orderDTO: UpdateOrderDTO): Promise<Order> {
-        const existingOrder = await this.orderRepository.findOneOrFail({
-            where: { id },
-            relations: ['client', 'orderDetails'],
-        });
-
-        if (orderDTO.orderDate) existingOrder.orderDate = orderDTO.orderDate;
-        if (orderDTO.clientId) {
-            existingOrder.clientId = orderDTO.clientId;
-            existingOrder.client = await this.clientRepository.findOneOrFail({ where: { ClienteID: orderDTO.clientId } });
-        }
-        if (orderDTO.brand) existingOrder.brand = orderDTO.brand;
-        if (orderDTO.type) existingOrder.type = orderDTO.type;
-        if (orderDTO.plate) existingOrder.plate = orderDTO.plate;
-        if (orderDTO.color) existingOrder.color = orderDTO.color;
-        if (orderDTO.year) existingOrder.year = orderDTO.year;
-        if (orderDTO.nextService) existingOrder.nextService = orderDTO.nextService;
-        if (orderDTO.laborCost) existingOrder.laborCost = orderDTO.laborCost;
-        if (orderDTO.abono) existingOrder.abono = orderDTO.abono;
-        if (orderDTO.estado) existingOrder.estado = orderDTO.estado;
-
-
-        if (orderDTO.orderDetails && orderDTO.orderDetails.length > 0) {
-            await this.orderDetailRepository.remove(existingOrder.orderDetails);
-            const newOrderDetails: OrderDetail[] = [];
-            let total = existingOrder.laborCost;
-            for (const detailDTO of orderDTO.orderDetails) {
-                const product = await this.productRepository.findOneOrFail({ where: { ProductoID: detailDTO.productId } });
-                const orderDetail = this.orderDetailRepository.create({
-                    productId: detailDTO.productId,
-                    quantity: detailDTO.quantity,
-                    unitPrice: product.PrecioUnitario,
-                    order: existingOrder,
-                });
-                total += detailDTO.quantity * product.PrecioUnitario;
-                newOrderDetails.push(orderDetail);
-            }
-            existingOrder.orderDetails = newOrderDetails;
-            existingOrder.total = total;
-        }
-        else {
-            let total = existingOrder.laborCost;
-            for (let detail of existingOrder.orderDetails) {
-                const product = await this.productRepository.findOneOrFail({ where: { ProductoID: detail.productId } });
-                total += detail.quantity * product.PrecioUnitario;
-            }
-            existingOrder.total = total;
-        }
-        if (orderDTO.abono) {
-            if (orderDTO.abono > existingOrder.total) {
-                throw new Error('El abono no puede ser mayor que el total');
-            }
-        }
-        return this.orderRepository.save(existingOrder);
-    }
-
-    async remove(id: number): Promise<void> {
-        const order = await this.orderRepository.findOneOrFail({ where: { id } });
-        await this.orderRepository.remove(order);
     }
 }

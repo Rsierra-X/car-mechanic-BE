@@ -1,54 +1,38 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
-import { Cliente } from '../../clientes/entities/cliente.entity';
+import {Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm";
+import {Cliente} from "../../clientes/entities/cliente.entity";
+import {Vehiculo} from "../../vehiculos/entities/vehiculos.entity";
 import {OrderDetail} from "../../detalle-orden/entities/orderDetail";
 
-@Entity()
+@Entity('Ordenes')
 export class Order {
     @PrimaryGeneratedColumn()
     id: number;
 
     @Column({ type: 'date' })
-    orderDate: Date;
+    fecha: Date;
 
-    @ManyToOne(() => Cliente, client => client.orders)
-    @JoinColumn({ name: 'clientId' })
-    client: Cliente;
-
-    @Column()
-    clientId: number;
+    @ManyToOne(() => Cliente, { eager: true })
+    @JoinColumn({ name: 'clienteId' })
+    cliente: Cliente;
 
     @Column()
-    clientName: string;
+    clienteId: number;
+
+    @ManyToOne(() => Vehiculo, { eager: true })
+    @JoinColumn({ name: 'vehiculoId' })
+    vehiculo: Vehiculo;
 
     @Column()
-    clientNit: string;
+    vehiculoId: number;
 
-    @Column()
-    brand: string;
-
-    @Column()
-    type: string;
-
-    @Column()
-    plate: string;
-
-    @Column({ nullable: true })
-    color?: string;
-
-    @Column({ nullable: true })
-    year?: string;
-
-    @Column({ nullable: true })
-    nextService?: string;
-
-    @OneToMany(() => OrderDetail, orderDetail => orderDetail.order, { cascade: ['insert', 'update'] })
-    orderDetails: OrderDetail[];
+    @OneToMany(() => OrderDetail, detail => detail.order, { cascade: true })
+    detalles: OrderDetail[];
 
     @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
-    laborCost: number;
+    manoDeObra: number;
 
     @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-    abono?: number;
+    abono: number;
 
     @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
     total: number;

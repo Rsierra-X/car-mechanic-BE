@@ -1,4 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import {Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn} from 'typeorm';
+import {MarcaProducto} from "./marca-producto.entity/marca-producto.entity";
+import {TipoProducto} from "./tipo-producto.entity/tipo-producto.entity";
 
 @Entity('Productos')
 export class Producto {
@@ -19,4 +21,15 @@ export class Producto {
 
     @CreateDateColumn()
     FechaIngreso: Date;
+
+    @Column()
+    sku: string;
+
+    @ManyToOne(() => MarcaProducto, { eager: true })
+    @JoinColumn()
+    marca: MarcaProducto;
+
+    @ManyToOne(() => TipoProducto, { eager: true })
+    @JoinColumn()
+    tipo: TipoProducto;
 }

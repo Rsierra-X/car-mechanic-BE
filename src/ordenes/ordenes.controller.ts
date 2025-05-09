@@ -1,38 +1,26 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, ParseIntPipe, UseGuards } from '@nestjs/common';
+import {Controller, Get, Post, Body, Put, Param, Delete, ParseIntPipe, UseGuards, Patch} from '@nestjs/common';
 import {OrderService} from "./ordenes.service";
-import {CreateOrderDTO, UpdateOrderDTO} from "./dto/orden.dto";
-import {Order} from "./entities/orden.entity";
+import {CreateOrderDto, UpdateOrderDto} from "./dto/orden.dto";
 
-@Controller('orders')
-//@UseGuards(JwtAuthGuard)  // Descomenta esto para proteger la ruta
-export class OrderController {
-    constructor(private readonly orderService: OrderService) { }
+@Controller('ordenes')
+export class OrdersController {
+    constructor(private readonly ordersService: OrderService) {}
 
     @Post()
-    async create(@Body() orderDTO: CreateOrderDTO): Promise<Order> {
-        return this.orderService.create(orderDTO);
+    async create(@Body() createOrderDto: CreateOrderDto) {
+        return this.ordersService.create(createOrderDto);
     }
 
     @Get()
-    async findAll(): Promise<Order[]> {
-        return this.orderService.findAll();
+    async findAll() {
+        return this.ordersService.findAll();
     }
 
-    @Get(':id')
-    async findOne(@Param('id', ParseIntPipe) id: number): Promise<Order> {
-        return this.orderService.findOne(id);
-    }
-
-    @Put(':id')
-    async update(
+    @Patch(':id/estado')
+    async updateEstado(
         @Param('id', ParseIntPipe) id: number,
-        @Body() orderDTO: UpdateOrderDTO,
-    ): Promise<Order> {
-        return this.orderService.update(id, orderDTO);
-    }
-
-    @Delete(':id')
-    async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-        await this.orderService.remove(id);
+        @Body('estado') estado: string
+    ) {
+        return this.ordersService.updateEstado(id, estado);
     }
 }

@@ -8,6 +8,12 @@ import {AuthModule} from './auth/auth.module';
 import {OrdenesModule} from "./ordenes/ordenes.module";
 import {VehiculosModule} from "./vehiculos/vehiculos.module";
 import {InventarioModule} from "./inventario/inventario.module";
+import {DetalleOrdenModule} from "./detalle-orden/detalle-orden.module";
+import { VehiculosListaModule } from './vehiculos-lista/vehiculos-lista.module';
+import { ServicioService } from './servicio/servicio.service';
+import { ServicioController } from './servicio/servicio.controller';
+import { ServicioModule } from './servicio/servicio.module';
+import { DetalleOrderController } from './detalle-order/detalle-order.controller';
 
 @Module({
   imports: [
@@ -20,7 +26,7 @@ import {InventarioModule} from "./inventario/inventario.module";
       database: 'tallermecanicodb',
       entities: [__dirname + '/**/*.entity.{ts,js}'],
       synchronize: false, // ¡Cuidado! En producción, usa migraciones syncronize = false
-      autoLoadEntities: false, // <-- ADD THIS LINE
+      autoLoadEntities: true,
       logging: ['error', 'warn'],
     }),
     UsuariosModule,
@@ -28,14 +34,12 @@ import {InventarioModule} from "./inventario/inventario.module";
     OrdenesModule,
     AuthModule,
     VehiculosModule,
-    InventarioModule
-    /*
-    DetalleOrdenModule,
     InventarioModule,
-    ReportesModule,
-    */
+    DetalleOrdenModule,
+    VehiculosListaModule,
+    ServicioModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, ServicioService],
 })
 export class AppModule {}

@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable, UnauthorizedException} from '@nestjs/common';
+import {BadRequestException, Injectable, OnApplicationBootstrap, UnauthorizedException} from '@nestjs/common';
 import {InjectRepository} from "@nestjs/typeorm";
 import {Usuario} from "../usuarios/entities/usuario.entity";
 import {Repository} from "typeorm";
@@ -6,17 +6,32 @@ import {RegisterDto} from "./dto/register.dto";
 import * as bcrypt from 'bcrypt';
 import {JwtService} from "@nestjs/jwt";
 import {LoginDto} from "./dto/login.dto";
+import vehiculosData from "../vehiculos-lista/vehiculos-lista.json";
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnApplicationBootstrap{
     constructor(
         @InjectRepository(Usuario)
         private usuarioRepository: Repository<Usuario>,
         private jwtService: JwtService,
     ) {}
 
+
+    async onApplicationBootstrap() {
+        const count = await this.usuarioRepository.count();
+        if (count === 0) {
+            const dto: RegisterDto = {
+                NombreUsuario: 'admin',
+                Contrasena: '@dmin',
+                Rol: "1",
+            };
+
+            await this.register(dto);
+            console.log('Usuario Admin creado correctamente.');
+        }
+    }
+
     async register(dto: RegisterDto): Promise<Omit<Usuario, 'Contrasena'>> {
-        console.log(dto)
         const existe = await this.usuarioRepository.findOne({
             where: { NombreUsuario: dto.NombreUsuario },
         });
