@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {BadRequestException, Injectable, NotFoundException} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {Order} from "./entities/orden.entity";
@@ -29,55 +29,64 @@ export class OrderService {
     ) {}
 
     async create(createOrderDto: CreateOrderDto): Promise<Order> {
-
         const cliente = await this.clienteRepository.findOneBy({ ClienteID: createOrderDto.clienteId });
         if (!cliente) throw new NotFoundException('Cliente no encontrado');
 
-        const vehiculoDto = createOrderDto.vehiculo
-        let vehiculoExistente = await this.vehiculoRepository.findOne({
-            where: { Placa: vehiculoDto.Placa, ClienteID: createOrderDto.clienteId }
+        // 1. Buscar o crear vehículo
+        const vehiculoDto = createOrderDto.vehiculo;
+        let vehiculo = await this.vehiculoRepository.findOne({
+            where: {
+                Placa: vehiculoDto.Placa,
+                ClienteID: createOrderDto.clienteId
+            }
         });
 
-        if (vehiculoExistente) {
-            vehiculoExistente.Kilometraje = vehiculoDto.Kilometraje;
-            vehiculoExistente.Color = vehiculoDto.Color;
-            vehiculoExistente.Marca = vehiculoDto.Marca;
-            vehiculoExistente.Modelo = vehiculoDto.Modelo;
-            vehiculoExistente.Anio = vehiculoDto.Anio;
-            await this.vehiculoRepository.save(vehiculoExistente);
-        } else {
-            const createVehiculo: CreateVehiculoDTO = {
-                Anio: vehiculoDto.Anio,
-                ClienteID: createOrderDto.clienteId,
-                Color: vehiculoDto.Color,
+        if (vehiculo) {
+            Object.assign(vehiculo, {
                 Kilometraje: vehiculoDto.Kilometraje,
+                Color: vehiculoDto.Color,
                 Marca: vehiculoDto.Marca,
                 Modelo: vehiculoDto.Modelo,
-                Placa: vehiculoDto.Placa
-            }
-            vehiculoExistente = await this.vehiculoService.findOrCreate(createVehiculo);
+                Anio: vehiculoDto.Anio
+            });
+            await this.vehiculoRepository.save(vehiculo);
+        } else {
+            vehiculo = await this.vehiculoService.findOrCreate({
+                ...vehiculoDto,
+                ClienteID: createOrderDto.clienteId
+            });
         }
 
-        const nuevaOrdenStructure: Partial<Order> = {
+        // 2. Crear la orden
+        const nuevaOrden = this.orderRepository.create({
             fecha: new Date(),
             clienteId: createOrderDto.clienteId,
-            vehiculoId: vehiculoExistente.VehiculoID,
+            vehiculoId: vehiculo.VehiculoID,
             manoDeObra: createOrderDto.manoDeObra || 0,
             abono: createOrderDto.abono || 0,
             total: createOrderDto.total || 0,
-            estado: 'Pendiente',
-        }
-
-        const nuevaOrden = this.orderRepository.create(nuevaOrdenStructure);
+            estado: 'Pendiente'
+        });
 
         const savedOrder = await this.orderRepository.save(nuevaOrden);
 
-        await Promise.all(
-            createOrderDto.detalles.map((det: CreateOrderDetailDto) =>
-                this.orderDetailService.create({ ...det, orderId: savedOrder.id })
-            )
-        );
+        for (const det of createOrderDto.detalles) {
+            const detalleDto = new CreateOrderDetailDto();
+            detalleDto.orderId = savedOrder.id;
+            detalleDto.tipo = det.tipo;
+            detalleDto.cantidad = det.cantidad;
+            detalleDto.precioUnitario = det.precioUnitario;
 
+            if (det.tipo === 'producto') {
+                detalleDto.productoId = det.productoId;
+            } else if (det.tipo === 'servicio') {
+                detalleDto.servicioId = det.servicioId;
+            }
+
+            await this.orderDetailService.create(detalleDto);
+        }
+
+        // 4. Retornar la orden con sus detalles
         const ordenConDetalles = await this.orderRepository.findOne({
             where: { id: savedOrder.id },
             relations: ['detalles'],
@@ -90,11 +99,24 @@ export class OrderService {
         return ordenConDetalles;
     }
 
-    async updateEstado(id: number, nuevoEstado: string): Promise<Order> {
-        const orden = await this.orderRepository.findOneBy({ id });
-        if (!orden) throw new NotFoundException('Orden no encontrada');
-        orden.estado = nuevoEstado;
-        return await this.orderRepository.save(orden);
+    async updateEstado(id: number): Promise<Order> {
+        const order = await this.orderRepository.findOneBy({ id });
+        if (!order) {
+            throw new NotFoundException(`Orden con ID ${id} no encontrada`);
+        }
+
+        switch (order.estado) {
+            case 'Pendiente':
+                order.estado = 'En Proceso';
+                break;
+            case 'En Proceso':
+                order.estado = 'Entregada';
+                break;
+            default:
+                throw new BadRequestException(`No se puede actualizar el estado desde ${order.estado}`);
+        }
+
+        return await this.orderRepository.save(order);
     }
 
     async findAll(): Promise<Order[]> {

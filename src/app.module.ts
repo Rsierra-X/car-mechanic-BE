@@ -23,7 +23,7 @@ import {ServicioModule} from './servicio/servicio.module';
       password: 'root',
       database: 'tallermecanicodb',
       entities: [__dirname + '/**/*.entity.{ts,js}'],
-      synchronize: true, // ¡Cuidado! En producción, usa migraciones syncronize = false
+      synchronize: false, // ¡Cuidado! En producción, usa migraciones syncronize = false
       autoLoadEntities: true,
       logging: ['error', 'warn'],
     }),

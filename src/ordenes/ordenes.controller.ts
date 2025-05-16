@@ -16,11 +16,8 @@ export class OrdersController {
         return this.ordersService.findAll();
     }
 
-    @Patch(':id/estado')
-    async updateEstado(
-        @Param('id', ParseIntPipe) id: number,
-        @Body('estado') estado: string
-    ) {
-        return this.ordersService.updateEstado(id, estado);
+    @Patch('/estado/:id')
+    async updateEstado(@Param('id', ParseIntPipe) id: number) {
+        return this.ordersService.updateEstado(id);
     }
 }
